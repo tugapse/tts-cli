@@ -62,7 +62,7 @@ def main():
     parser.add_argument(
         "--temperature",
         type=float,
-        default=0.5,
+        default=0.9,
         help="Sampling temperature for text-to-speech generation. Higher values increase randomness."
     )
     parser.add_argument(
