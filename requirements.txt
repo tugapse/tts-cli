@@ -1,0 +1,6 @@
+torch
+transformers
+soundfile
+numpy
+huggingface_hub
+parler_tts
