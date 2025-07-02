@@ -141,8 +141,15 @@ class ParlerTTSModel(BaseTTSModel):
             ).cpu().numpy()
 
         audio = audio_tensor.squeeze()
-        sf.write(audio_tensor, samplerate=self.model.config.sampling_rate, format='WAV')
-       
+        if np.max(np.abs(audio)) > 0:
+            audio = audio / np.max(np.abs(audio))
+        
+        audio_int16 = (audio * 32767).astype(np.int16)
+
+        wav_buffer = io.BytesIO()
+        sf.write(wav_buffer, audio_int16, samplerate=self.model.config.sampling_rate, format='WAV')
+        wav_bytes = wav_buffer.getvalue()
+        wav_buffer.close()
 
         log_status(f"Audio generation complete. Generated {len(wav_bytes)} bytes.", Color.GREEN)
         return wav_bytes
