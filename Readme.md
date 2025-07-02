@@ -1,9 +1,8 @@
 # ParlerTTS CLI Application
 
-This repository contains a command-line interface (CLI) application for generating high-quality, natural-sounding speech using the ParlerTTS models from Hugging Face. The project is structured for modularity and extensibility, allowing for easy integration of different TTS backends in the future.
+This repository contains a command-line interface (CLI) application for generating high-quality, natural-sounding speech using the ParlerTTS Mini Multilingual v1.1 model from Hugging Face. The project is structured for modularity and extensibility, allowing for easy integration of different TTS backends in the future.
 
 ## Table of Contents
-
 - [Features](#features)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
@@ -21,17 +20,15 @@ This repository contains a command-line interface (CLI) application for generati
 - [License](#license)
 
 ## Features
-
-- **Text-to-Speech Generation**: Convert text into high-fidelity audio.
+- **Text-to-Speech Generation**: Convert text into high-fidelity audio using the `parler-tts-mini-multilingual-v1.1` model.
 - **Voice Control**: Customize voice characteristics (gender, tone, pace, style) using natural language descriptions.
 - **Modular Design**: Clean separation of concerns with an abstract base class for easy integration of other TTS models.
 - **CLI Interface**: Simple command-line arguments for configuration and execution.
 - **GPU Acceleration**: Supports CUDA for faster generation if a compatible GPU is available.
 
 ## Project Structure
-
 ```
-tts_cli/
+tts-cli/
 ├── src/
 │   ├── __init__.py           # Makes 'src' a Python package
 │   ├── base_tts_model.py     # Abstract Base Class for TTS models
@@ -43,58 +40,49 @@ tts_cli/
 ```
 
 ## Installation
-
 ### System Dependencies (Arch Linux)
-
-Before installing Python packages, ensure you have the necessary system-level build tools, especially for packages like sentencepiece which require compilation.
+Before installing Python packages, ensure you have the necessary system-level build tools, especially for packages like `sentencepiece` which require compilation.
 
 ```bash
 sudo pacman -Syu             # Update your system first
 sudo pacman -S base-devel cmake pkgconf
 ```
 
-- **base-devel**: Provides essential build tools like gcc, make, etc.
-- **cmake**: Required for compiling sentencepiece.
-- **pkgconf**: Provides pkg-config.
+- **base-devel**: Provides essential build tools like `gcc`, `make`, etc.
+- **cmake**: Required for compiling `sentencepiece`.
+- **pkgconf**: Provides `pkg-config`.
 
 ### Python Environment Setup
-
 It is highly recommended to use a stable Python version (e.g., Python 3.11 or 3.12) and a virtual environment to avoid conflicts with your system's Python packages. Python 3.13 is still in early development and may have compatibility issues with some libraries.
 
 Navigate to your project's root directory:
-
 ```bash
 cd /path/to/your/tts_app/
 ```
 
 Deactivate any existing virtual environment:
-
 ```bash
 deactivate
 ```
 
 Delete any old virtual environment (for a clean slate):
-
 ```bash
 rm -rf .venv
 ```
 
 Install your preferred stable Python version (if not already installed):
-
 ```bash
 sudo pacman -S python311 # Or python312 if you prefer
 ```
 
 Create a new virtual environment using the stable Python version:
-
 ```bash
 python3.11 -m venv .venv
 ```
 
-(Replace `python3.11` with your chosen version, e.g., `python3.12`.)
+(Replace `python3.11` with your chosen version, e.g., `python3.12`).
 
 Activate the new virtual environment:
-
 ```bash
 source .venv/bin/activate
 ```
@@ -102,7 +90,6 @@ source .venv/bin/activate
 You should see `(.venv)` at the beginning of your terminal prompt.
 
 Verify the Python version in the new environment:
-
 ```bash
 python --version
 ```
@@ -110,48 +97,37 @@ python --version
 Ensure it shows Python 3.11.x (or your chosen stable version).
 
 ### Python Package Installation
-
 Install the required Python libraries using pip and the `requirements.txt` file.
-
 ```bash
 pip install -r requirements.txt
 ```
 
 ### GPU (CUDA) Support
-
 If you have a CUDA-compatible NVIDIA GPU and want to leverage it for faster inference, you must install PyTorch specifically for your CUDA version. The `torch` entry in `requirements.txt` installs the CPU-only version by default.
 
 Identify your CUDA version. Visit the official PyTorch website's "Get Started" section: https://pytorch.org/get-started/locally/
 
-Select your exact configuration (e.g., OS, Package, Language, CUDA version) to get the precise installation command.
-
-Run that command after you've run `pip install -r requirements.txt`.
+Select your exact configuration (e.g., OS, Package, Language, CUDA version) to get the precise installation command. Run that command after you've run `pip install -r requirements.txt`.
 
 Example for CUDA 11.8:
-
 ```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
 Example for CUDA 12.1:
-
 ```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
 
 ## Usage
-
 Navigate to the root directory of your `tts_app` project and activate your virtual environment before running the `main.py` script.
-
 ```bash
 cd /path/to/your/tts_app/
 source .venv/bin/activate
 ```
 
 ### Basic Usage
-
 The `--text` argument is required.
-
 ```bash
 python main.py --text "Hello, this is a test of the Parler TTS CLI application."
 ```
@@ -159,9 +135,7 @@ python main.py --text "Hello, this is a test of the Parler TTS CLI application."
 This will generate `output.wav` in your current directory.
 
 ### Controlling Voice Characteristics
-
 Use the `--description_prompt` argument to specify the desired voice characteristics. This is crucial for achieving consistent voices.
-
 ```bash
 python main.py \
     --text "A calm and clear female voice will speak this sentence." \
@@ -179,9 +153,7 @@ python main.py \
 By using the exact same `--description_prompt` string, you instruct the model to aim for consistent voice characteristics across generations.
 
 ### Full CLI Options
-
 You can see all available arguments and their default values by running:
-
 ```bash
 python main.py --help
 ```
@@ -195,7 +167,7 @@ options:
   --output_path OUTPUT_PATH
                         The path to save the generated WAV audio file. (default: output.wav)
   --model_name MODEL_NAME
-                        The Hugging Face model identifier for Parler-TTS. (default: parler-tts/parler-tts-mini-v1)
+                        The Hugging Face model identifier for Parler-TTS. (default: parler-tts/parler-tts-mini-multilingual-v1.1)
   --language LANGUAGE   The language of the input text (e.g., 'en', 'fr', 'es'). Note: ParlerTTS primarily uses description prompt for voice, and language is inferred from text. This argument is kept for compatibility. (default: en)
   --speaker_embedding_path SPEAKER_EMBEDDING_PATH
                         Optional path to a .npy file containing a speaker embedding. Note: ParlerTTS mini-v1 primarily uses description prompt for voice. This argument is kept for compatibility with other potential models. (default: None)
@@ -211,18 +183,16 @@ options:
 ```
 
 ## Speaker Consistency Across Generations
-
 ParlerTTS achieves speaker consistency primarily through the `description_prompt`. To maintain the same voice and tone across multiple generated audio segments, always use the **exact same string** for the `--description_prompt` argument for each segment.
 
 The model was trained to interpret these natural language descriptions to synthesize speech with the specified characteristics. Experiment with descriptive phrases like:
 
-* `"A deep, resonant male voice, speaking slowly."`
-* `"An energetic female voice with a slightly high pitch."`
-* `"Jon's voice is monotone yet slightly fast in delivery, with a very close recording that almost has no background noise."` (Example from ParlerTTS documentation for a named speaker).
+- `"A deep, resonant male voice, speaking slowly."`
+- `"An energetic female voice with a slightly high pitch."`
+- `"Jon's voice is monotone yet slightly fast in delivery, with a very close recording that almost has no background noise."` (Example from ParlerTTS documentation for a named speaker).
 
 ## Troubleshooting
-
-* **`ImportError: cannot import name 'AutoModelForTextToSpeech'` or "architecture not recognized"**:
+- **`ImportError: cannot import name 'AutoModelForTextToSpeech'` or "architecture not recognized"**:
     This indicates a version mismatch or caching issue.
     1. Ensure you are using a **stable Python version** (3.11 or 3.12 recommended).
     2. Perform a **clean reinstallation** of dependencies:
@@ -236,24 +206,22 @@ The model was trained to interpret these natural language descriptions to synthe
         pip install -r requirements.txt
         # Reinstall CUDA torch if needed
         ```
-* **`subprocess.CalledProcessError: Command '['./build_bundled.sh', '0.2.0']' returned non-zero exit status 1.` (during `sentencepiece` installation)**:
+- **`subprocess.CalledProcessError: Command '['./build_bundled.sh', '0.2.0']' returned non-zero exit status 1.` (during `sentencepiece` installation)**:
     This is a compilation error.
     1. Ensure you have **system-level build tools** installed (e.g., `base-devel`, `cmake`, `pkgconf` on Arch Linux).
     2. Verify your `cmake` version is 3.5 or newer (`cmake --version`).
     3. Confirm you are using a **stable Python version** (3.11 or 3.12).
     4. Perform a **clean reinstallation** as described above.
-* **"Flash attention 2 is not installed"**:
+- **"Flash attention 2 is not installed"**:
     This is a performance warning, not an error. The application will still function. For performance gains on NVIDIA GPUs, you can try:
     ```bash
     pip install flash-attn --no-build-isolation
     ```
-* **`FutureWarning: torch.nn.utils.weight_norm is deprecated...`**:
+- **`FutureWarning: torch.nn.utils.weight_norm is deprecated...`**:
     This is a deprecation warning from PyTorch. It's harmless for current functionality and does not require action from your side; it needs to be addressed by the `parler_tts` library maintainers in future updates.
 
 ## Contributing
-
 Feel free to open issues or submit pull requests if you find bugs or have suggestions for improvements.
 
 ## License
-
 This project is open-source. Please refer to the specific licenses of the underlying libraries (ParlerTTS, Transformers, PyTorch, etc.) for their respective terms of use.
