@@ -1,3 +1,5 @@
+# tts_app/src/parler_tts_model.py
+
 import torch
 import numpy as np
 import soundfile as sf
@@ -21,7 +23,7 @@ class ParlerTTSModel(BaseTTSModel):
     """
     def __init__(
         self,
-        model_name: str = "parler-tts/parler-tts-mini-v1",
+        model_name: str = "parler-tts/parler-tts-mini-v1", # Changed default model name
         device: str = None,
         generation_config_defaults: dict = None,
     ):
@@ -75,13 +77,14 @@ class ParlerTTSModel(BaseTTSModel):
     def generate_audio_bytes(
         self,
         text: str,
-        language: str = "en", # Kept for BaseTTSModel compatibility, not directly used by ParlerTTS
-        speaker_embedding: torch.Tensor = None, # Kept for BaseTTSModel compatibility, not directly used by ParlerTTS
+        language: str = "en", # Kept for BaseTTSModel compatibility, but not used by ParlerTTS here
+        speaker_embedding: torch.Tensor = None, # Kept for BaseTTSModel compatibility, but not used by ParlerTTS here
         generation_params: dict = None,
         description_prompt: str = "A clear voice with a neutral tone.", 
     ) -> bytes:
         """
         Generates audio bytes from the given text using the Parler-TTS model.
+        This method is implemented from the BaseTTSModel abstract class.
         Returns audio as WAV-formatted bytes.
         
         Args:
@@ -107,15 +110,21 @@ class ParlerTTSModel(BaseTTSModel):
             torch.cuda.empty_cache()
             gc.collect()
 
-        prompt_input_ids = self.main_tokenizer(
+        # Prepare inputs using the main tokenizer for the text prompt
+        # Explicitly request attention_mask
+        prompt_inputs = self.main_tokenizer(
             text, 
-            return_tensors="pt"
-        ).input_ids.to(self.device)
+            return_tensors="pt",
+            return_attention_mask=True # Request attention mask
+        ).to(self.device)
 
-        description_input_ids = self.description_tokenizer(
+        # Prepare inputs using the description tokenizer for the voice description
+        # Explicitly request attention_mask
+        description_inputs = self.description_tokenizer(
             description_prompt, 
-            return_tensors="pt"
-        ).input_ids.to(self.device)
+            return_tensors="pt",
+            return_attention_mask=True # Request attention mask
+        ).to(self.device)
 
 
         final_generation_params = self.generation_config_defaults.copy()
@@ -124,8 +133,10 @@ class ParlerTTSModel(BaseTTSModel):
 
         with torch.no_grad():
             audio_tensor = self.model.generate(
-                input_ids=description_input_ids,
-                prompt_input_ids=prompt_input_ids,
+                input_ids=description_inputs.input_ids, # This is the 'description' input_ids
+                attention_mask=description_inputs.attention_mask, # Pass attention mask for description
+                prompt_input_ids=prompt_inputs.input_ids, # This is the 'text' input_ids
+                prompt_attention_mask=prompt_inputs.attention_mask, # Pass attention mask for text
                 **final_generation_params
             ).cpu().numpy()
 
