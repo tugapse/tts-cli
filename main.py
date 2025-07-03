@@ -4,21 +4,48 @@ import os
 import numpy as np
 import torch
 
-from src.parler_tts_model import ParlerTTSModel
-from src.utils import log_status
-from src.colors import Color
+from src.models.model_manager import ModelManager
+from src.utils import log_status, Color
+
+__version__ = "0.2.0"
+__available_model_types = ["parler", "orpheus"]
 
 def main():
     parser = argparse.ArgumentParser(
-        description=f"{Color.BOLD}{Color.BLUE}ParlerTTS CLI App:{Color.RESET} Generate speech from text using Hugging Face Parler-TTS models.",
+        description=f"{Color.BOLD}{Color.BLUE}TTS CLI App:{Color.RESET} Generate speech from text using Hugging Face TTS models.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
+    # --- New Argument for Building/Installing Dependencies ---
+    parser.add_argument(
+        "--build",
+        action="store_true",
+        help="Run the dependency installation script (dependency_installer.py) before running the main app."
+    )
+    
+    # --- Argument to auto-accept prompts for both main and build scripts ---
+    parser.add_argument(
+        "--auto-accept",
+        "-y",
+        action="store_true",
+        help="Automatically accept all installation prompts if --build is used."
+    )
+
+    # --- New Argument for Model Type Selection ---
+    parser.add_argument(
+        "--model-type",
+        type=str,
+        default="parler",
+        choices=__available_model_types, # Restrict choices to currently supported models
+        help=f"The type of TTS model to use. Currently supports {__available_model_types}."
+    )
+
     # --- Required Argument ---
+    # Make --text not required initially, as it might be skipped if only --build is used
     parser.add_argument(
         "--text",
         type=str,
-        required=True,
+        required=False, 
         help="The text string to convert to speech."
     )
     
@@ -32,8 +59,8 @@ def main():
     parser.add_argument(
         "--model_name",
         type=str,
-        default="parler-tts/parler-tts-mini-v1",
-        help="The Hugging Face model identifier for Parler-TTS."
+        default=None,
+        help="The Hugging Face model identifier."
     )
     parser.add_argument(
         "--language",
@@ -91,12 +118,44 @@ def main():
         help="A text description of the desired voice characteristics (e.g., 'A female speaker with a calm voice.')."
     )
 
+    parser.add_argument(
+        "--debug-console","-dc",
+        action='store_true',
+        help="raise erros in the console!"
+    )
+
     args = parser.parse_args()
+
+    # --- Handle the --build argument ---
+    if args.build:
+        log_status(f"{Color.BOLD}{Color.GREEN}Running dependency installer...{Color.RESET}", Color.GREEN)
+        try:
+            # Import the dependency_installer module
+            import dependency_installer
+            # Call its main function, passing the auto_accept status
+            dependency_installer.main(auto_accept=args.auto_accept)
+            log_status(f"{Color.BOLD}{Color.GREEN}Dependency installation completed.{Color.RESET}", Color.GREEN)
+        except ImportError:
+            log_status(f"{Color.RED}Error: 'dependency_installer.py' not found in the same directory.{Color.RESET}", Color.RED)
+            sys.exit(1)
+        except Exception as e:
+            log_status(f"{Color.RED}An error occurred during dependency installation: {e}{Color.RESET}", Color.RED)
+            sys.exit(1)
+        
+        # If only building, exit after installation
+        if not args.text: # If --text is not provided, assume user only wanted to build
+            log_status(f"{Color.BOLD}{Color.BLUE}Exiting after dependency installation. To run the app, provide --text.{Color.RESET}", Color.BLUE)
+            sys.exit(0)
+
+    # Ensure --text is provided if not just building
+    if not args.text:
+        parser.error("--text is required unless --build is specified to only install dependencies.")
 
     log_status(f"{Color.BOLD}--- ParlerTTS CLI App Started ---{Color.RESET}", Color.BLUE)
     log_status(f"Input Text: '{args.text[:100]}{'...' if len(args.text) > 100 else ''}'", Color.CYAN)
     log_status(f"Output Path: {args.output_path}", Color.CYAN)
     log_status(f"Model Name: {args.model_name}", Color.CYAN)
+    log_status(f"Model Type: {args.model_type}", Color.CYAN) # Log the new argument
     log_status(f"Language: {args.language}", Color.CYAN)
     log_status(f"Speaker Embedding Path: {args.speaker_embedding_path if args.speaker_embedding_path else 'None (random speaker)'}", Color.CYAN)
     log_status(f"Description Prompt: '{args.description_prompt}'", Color.CYAN)
@@ -122,36 +181,29 @@ def main():
             'max_new_tokens': args.max_new_tokens,
         }
 
-        tts_engine = ParlerTTSModel(
+        # Use ModelManager to load the TTS engine
+        model_manager = ModelManager(model_type=args.model_type)
+        # Pass ParlerTTSModel class to ModelManager to avoid circular imports
+        tts_engine = model_manager.load_model(
             model_name=args.model_name,
             device=args.device,
             generation_config_defaults=generation_params
         )
 
-        audio_bytes = tts_engine.generate_audio_bytes(
+        tts_engine.generate_audio_bytes(
             text=args.text,
             language=args.language,
             speaker_embedding=speaker_embedding_tensor,
             generation_params=generation_params,
-            description_prompt=args.description_prompt
+            description_prompt=args.description_prompt,
+            output_filename=args.output_path
         )
 
-        if audio_bytes:
-            output_dir = os.path.dirname(args.output_path)
-            if output_dir and not os.path.exists(output_dir):
-                os.makedirs(output_dir)
-                log_status(f"Created output directory: {output_dir}", Color.BLUE)
-            
-            with open(args.output_path, "wb") as f:
-                f.write(audio_bytes)
-            log_status(f"Audio successfully saved to: {args.output_path}", Color.GREEN)
-        else:
-            log_status(f"No audio generated for text: '{args.text}'. No file saved.", Color.YELLOW)
-
-        log_status(f"{Color.BOLD}--- ParlerTTS CLI App Finished Successfully ---{Color.RESET}", Color.BLUE)
 
     except Exception as e:
         log_status(f"{Color.RED}An error occurred during execution: {e}{Color.RESET}", Color.RED)
+        if args.debug_console:
+            raise e
         sys.exit(1)
     finally:
         if tts_engine:
@@ -159,4 +211,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

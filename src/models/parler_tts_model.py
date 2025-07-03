@@ -12,9 +12,8 @@ from parler_tts import ParlerTTSForConditionalGeneration
 from huggingface_hub.errors import RepositoryNotFoundError, GatedRepoError
 import requests.exceptions
 
-from src.base_tts_model import BaseTTSModel
-from src.utils import log_status
-from src.colors import Color
+from src.models.base_tts_model import BaseTTSModel
+from src.utils import log_status, Color
 
 class ParlerTTSModel(BaseTTSModel):
     """
@@ -23,7 +22,7 @@ class ParlerTTSModel(BaseTTSModel):
     """
     def __init__(
         self,
-        model_name: str = "parler-tts/parler-tts-mini-v1", # Changed default model name
+        model_name: str = None, # Changed default model name
         device: str = None,
         generation_config_defaults: dict = None,
     ):
@@ -31,6 +30,7 @@ class ParlerTTSModel(BaseTTSModel):
         self.description_tokenizer = None
         self.model = None 
         super().__init__(model_name, device, generation_config_defaults)
+        self.model_name = model_name or "parler-tts/parler-tts-mini-v1"
 
         try:
             self._load_model_and_processor()
@@ -56,6 +56,7 @@ class ParlerTTSModel(BaseTTSModel):
                 **load_kwargs
             )
             self.model.to(self.device) 
+            self.sampling_rate = self.model.config.sampling_rate
 
             self.description_tokenizer = AutoTokenizer.from_pretrained(self.model.config.text_encoder._name_or_path)
 
@@ -81,6 +82,7 @@ class ParlerTTSModel(BaseTTSModel):
         speaker_embedding: torch.Tensor = None, # Kept for BaseTTSModel compatibility, but not used by ParlerTTS here
         generation_params: dict = None,
         description_prompt: str = "A clear voice with a neutral tone.", 
+        output_filename="output.wav"
     ) -> bytes:
         """
         Generates audio bytes from the given text using the Parler-TTS model.
@@ -141,18 +143,20 @@ class ParlerTTSModel(BaseTTSModel):
             ).cpu().numpy()
 
         audio = audio_tensor.squeeze()
-        if np.max(np.abs(audio)) > 0:
-            audio = audio / np.max(np.abs(audio))
-        
-        audio_int16 = (audio * 32767).astype(np.int16)
-
-        wav_buffer = io.BytesIO()
-        sf.write(wav_buffer, audio_int16, samplerate=self.model.config.sampling_rate, format='WAV')
-        wav_bytes = wav_buffer.getvalue()
-        wav_buffer.close()
 
         log_status(f"Audio generation complete. Generated {len(wav_bytes)} bytes.", Color.GREEN)
-        return wav_bytes
+        audio = self.nomalize_to_wave_bytes(audio=audio, sampling_rate=self.model.config.sampling_rate )
+        output_dir = os.path.dirname(output_filename)
+       
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            log_status(f"Created output directory: {output_dir}", Color.BLUE)
+        
+        with open(output_filename, "wb") as f:
+            f.write(audio)
+            log_status(f"Audio successfully saved to: {args.output_path}", Color.GREEN)
+        
+
 
     def __del__(self):
         """Clean up ParlerTTS specific resources."""

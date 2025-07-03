@@ -1,9 +1,13 @@
 import torch
-from abc import ABC, abstractmethod
-import gc # Import gc for potential cleanup in __del__
+import numpy as np
+import soundfile as sf
+import os
+import io
+import gc
 
-from src.utils import log_status
-from src.colors import Color
+from abc import ABC, abstractmethod
+
+from src.utils import log_status, Color
 
 class BaseTTSModel(ABC):
     """
@@ -17,13 +21,14 @@ class BaseTTSModel(ABC):
         device: str = None,
         generation_config_defaults: dict = None,
     ):
-        self.model_name = model_name
+        if model_name: self.model_name = model_name
         
         self.device = device
         if self.device is None:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         log_status(f"BaseTTSModel will use device: {self.device}", Color.BLUE)
-
+        
+        self.sampling_rate = 24_000
         self.generation_config_defaults = {
             'do_sample': True,
             'max_new_tokens': 4096,
@@ -33,7 +38,15 @@ class BaseTTSModel(ABC):
         }
         if generation_config_defaults:
             self.generation_config_defaults.update(generation_config_defaults)
+    
+    def nomalize_to_wave_bytes(self, audio, sampling_rate=24_000):
+        audio_int16 = (audio * 32767).astype(np.int16)
 
+        wav_buffer = io.BytesIO()
+        sf.write(wav_buffer, audio_int16, samplerate=sampling_rate, format='WAV')
+        wav_bytes = wav_buffer.getvalue()
+        wav_buffer.close()
+        return wav_bytes
 
     @abstractmethod
     def _load_model_and_processor(self):
@@ -49,9 +62,9 @@ class BaseTTSModel(ABC):
         self,
         text: str,
         language: str = "en", 
-        speaker_embedding: torch.Tensor = None, 
         generation_params: dict = None,
-        description_prompt: str = None, 
+        output_filename="output.wav",
+        **kargs
     ) -> bytes:
         """
         Abstract method to generate audio bytes from text.
