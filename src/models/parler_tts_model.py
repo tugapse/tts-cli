@@ -144,8 +144,8 @@ class ParlerTTSModel(BaseTTSModel):
 
         audio = audio_tensor.squeeze()
 
-        log_status(f"Audio generation complete. Generated {len(wav_bytes)} bytes.", Color.GREEN)
         audio = self.nomalize_to_wave_bytes(audio=audio, sampling_rate=self.model.config.sampling_rate )
+        log_status(f"Audio generation complete. Generated {len(audio)} bytes.", Color.GREEN)
         output_dir = os.path.dirname(output_filename)
        
         if output_dir and not os.path.exists(output_dir):
@@ -154,7 +154,7 @@ class ParlerTTSModel(BaseTTSModel):
         
         with open(output_filename, "wb") as f:
             f.write(audio)
-            log_status(f"Audio successfully saved to: {args.output_path}", Color.GREEN)
+            log_status(f"Audio successfully saved to: {output_filename}", Color.GREEN)
         
 
 
