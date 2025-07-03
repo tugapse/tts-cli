@@ -1,8 +1,8 @@
 # ParlerTTS CLI Application
 
 This repository contains a command-line interface (CLI) application for generating high-quality, natural-sounding speech using the models from Hugging Face.
-[Orpheus 3B 0.1 Finetuned](https://huggingface.co/canopylabs/orpheus-3b-0.1-ft)
-[Parler-TTS Mini v1.1](https://huggingface.co/parler-tts/parler-tts-mini-v1.1)
+- [Orpheus 3B 0.1 Finetuned](https://huggingface.co/canopylabs/orpheus-3b-0.1-ft)
+- [Parler-TTS Mini v1.1](https://huggingface.co/parler-tts/parler-tts-mini-v1.1)
 
 The project is structured for modularity and extensibility, allowing for easy integration of different TTS backends in the future.
 
