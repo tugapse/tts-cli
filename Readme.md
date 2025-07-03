@@ -1,6 +1,10 @@
 # ParlerTTS CLI Application
 
-This repository contains a command-line interface (CLI) application for generating high-quality, natural-sounding speech using the ParlerTTS Mini Multilingual v1.1 model from Hugging Face. The project is structured for modularity and extensibility, allowing for easy integration of different TTS backends in the future.
+This repository contains a command-line interface (CLI) application for generating high-quality, natural-sounding speech using the models from Hugging Face.
+[Orpheus 3B 0.1 Finetuned](https://huggingface.co/canopylabs/orpheus-3b-0.1-ft)
+[Parler-TTS Mini v1.1](https://huggingface.co/parler-tts/parler-tts-mini-v1.1)
+
+The project is structured for modularity and extensibility, allowing for easy integration of different TTS backends in the future.
 
 ## Table of Contents
 - [Features](#features)
@@ -20,24 +24,10 @@ This repository contains a command-line interface (CLI) application for generati
 - [License](#license)
 
 ## Features
-- **Text-to-Speech Generation**: Convert text into high-fidelity audio using the `parler-tts-mini-multilingual-v1.1` model.
-- **Voice Control**: Customize voice characteristics (gender, tone, pace, style) using natural language descriptions.
+- **Text-to-Speech Generation**: Convert text into high-fidelity audio using Huggingface models.
 - **Modular Design**: Clean separation of concerns with an abstract base class for easy integration of other TTS models.
 - **CLI Interface**: Simple command-line arguments for configuration and execution.
 - **GPU Acceleration**: Supports CUDA for faster generation if a compatible GPU is available.
-
-## Project Structure
-```
-tts-cli/
-├── src/
-│   ├── __init__.py           # Makes 'src' a Python package
-│   ├── base_tts_model.py     # Abstract Base Class for TTS models
-│   ├── colors.py             # ANSI escape codes for colored console output
-│   ├── parler_tts_model.py   # Concrete implementation for ParlerTTS
-│   └── utils.py              # General utility functions (e.g., logging)
-├── main.py                   # Main CLI entry point
-└── requirements.txt          # Python dependencies
-```
 
 ## Installation
 ### System Dependencies (Arch Linux)
@@ -99,7 +89,7 @@ Ensure it shows Python 3.11.x (or your chosen stable version).
 ### Python Package Installation
 Install the required Python libraries using pip and the `requirements.txt` file.
 ```bash
-pip install -r requirements.txt
+python dependency_installer.py
 ```
 
 ### GPU (CUDA) Support
@@ -133,24 +123,6 @@ python main.py --text "Hello, this is a test of the Parler TTS CLI application."
 ```
 
 This will generate `output.wav` in your current directory.
-
-### Controlling Voice Characteristics
-Use the `--description_prompt` argument to specify the desired voice characteristics. This is crucial for achieving consistent voices.
-```bash
-python main.py \
-    --text "A calm and clear female voice will speak this sentence." \
-    --output_path "calm_female.wav" \
-    --description_prompt "A calm and clear female voice with a neutral accent."
-```
-
-```bash
-python main.py \
-    --text "Now, the same voice will speak a different sentence." \
-    --output_path "calm_female_2.wav" \
-    --description_prompt "A calm and clear female voice with a neutral accent."
-```
-
-By using the exact same `--description_prompt` string, you instruct the model to aim for consistent voice characteristics across generations.
 
 ### Full CLI Options
 You can see all available arguments and their default values by running:
