@@ -56,9 +56,8 @@ def main():
 
     # --- Other optional arguments ---
     parser.add_argument(
-        "--output-path",
+        "--output-file","-o",
         type=str,
-        default="output.wav",
         help="The path to save the generated WAV audio file."
     )
     parser.add_argument(
@@ -109,7 +108,7 @@ def main():
         help="Maximum number of new tokens to generate."
     )
     parser.add_argument(
-        "--description_prompt", "-dp",
+        "--description-prompt", "-dp",
         type=str,
         default="A clear voice with a neutral tone.",
         help="A text description of the desired voice characteristics."
@@ -118,6 +117,11 @@ def main():
         "--debug-console", "-dc",
         action='store_true',
         help="Raise errors in the console for debugging."
+    )
+    parser.add_argument(
+        "--quiet", "-q",
+        action='store_true',
+        help="Do not play the generated audio this is useful when you what to only save as a file."
     )
 
     args = parser.parse_args()
@@ -154,7 +158,8 @@ def main():
     # --- Logging input parameters ---
     log_status(f"{Color.BOLD}--- ParlerTTS CLI App Started ---{Color.RESET}", Color.BLUE)
     log_status(f"Input Text: '{final_text[:100]}{'...' if len(final_text) > 100 else ''}'", Color.CYAN)
-    log_status(f"Output Path: {args.output_path}", Color.CYAN)
+    if rgs.output_file: 
+        log_status(f"Output Path: {args.output_file}", Color.CYAN)
     log_status(f"Model Name: {args.model_name}", Color.CYAN)
     log_status(f"Model Type: {args.model_type}", Color.CYAN)
     log_status(f"Language: {args.language}", Color.CYAN)
@@ -189,14 +194,21 @@ def main():
             generation_config_defaults=generation_params
         )
 
-        tts_engine.generate_audio_bytes(
+        audio = tts_engine.generate_audio_bytes(
             text=final_text,
             language=args.language,
             speaker_embedding=speaker_embedding_tensor,
             generation_params=generation_params,
             description_prompt=args.description_prompt,
-            output_filename=args.output_path
+            output_filename=args.output_file
         )
+
+        if args.output_file:
+            tts_engine.save_audio_bytes(audio, args.output_file)
+
+        if not args.quiet:
+            tts_engine.play_audio_bytes(audio)
+        
 
     except Exception as e:
         log_status(f"{Color.RED}An error occurred during execution: {e}{Color.RESET}", Color.RED)

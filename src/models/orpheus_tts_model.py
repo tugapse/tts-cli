@@ -142,7 +142,6 @@ class OrpheusTTSModel(BaseTTSModel):
         text: str,
         language: str = "en", 
         generation_params: dict = None,
-        output_filename="output.wav",
         **kargs
     ) -> bytes:
         if self.model is None:
@@ -159,7 +158,7 @@ class OrpheusTTSModel(BaseTTSModel):
             gc.collect()
 
         buffer = []
-        for i, (sr, chunk) in enumerate(self.model.stream_tts_sync(text, options={"voice_id": "Dan"})):
+        for i, (sr, chunk) in enumerate(self.model.stream_tts_sync(text, options={"voice_id": self.generation_config_defaults.get('voice','dan')})):
             buffer.append(chunk)
             print(f"Generated chunk {i}")
         audio_np = np.concatenate(buffer, axis=1).squeeze()
@@ -169,15 +168,6 @@ class OrpheusTTSModel(BaseTTSModel):
         sf.write(audio_buffer, audio_np.T, self.sampling_rate, format='WAV')
         audio_bytes = audio_buffer.getvalue()
         log_status(f"Audio generation complete. Generated {len(audio_bytes)} bytes.", Color.GREEN)
-        
-        output_dir = os.path.dirname(output_filename)
-        if output_dir and not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-            log_status(f"Created output directory: {output_dir}", Color.BLUE)
-
-        with open(output_filename, "wb") as f:
-            f.write(audio_bytes)
-            log_status(f"Audio successfully saved to: {output_filename}", Color.GREEN)
 
         return audio_bytes
 

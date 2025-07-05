@@ -4,6 +4,8 @@ import soundfile as sf
 import os
 import io
 import gc
+import sounddevice as sd
+import soundfile as sf
 
 from abc import ABC, abstractmethod
 
@@ -56,6 +58,53 @@ class BaseTTSModel(ABC):
         This method should handle model loading, device placement, and error handling specific to the model.
         """
         pass
+    
+    def save_audio_bytes(self, audio_bytes: bytes, output_filename: str):
+        """
+        Save WAV bytes to a file, creating directories if needed.
+        """
+        output_dir = os.path.dirname(output_filename)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            log_status(f"Created output directory: {output_dir}", Color.BLUE)
+
+        with open(output_filename, "wb") as f:
+            f.write(audio_bytes)
+        log_status(f"Audio successfully saved to: {output_filename}", Color.GREEN)
+
+    def play_audio_bytes(self, audio_bytes: bytes):
+        """
+        Play WAV audio bytes directly using sounddevice.
+        """
+        try:
+            audio_buffer = io.BytesIO(audio_bytes)
+            data, samplerate = sf.read(audio_buffer, dtype='float32')
+            log_status(f"Playing audio ({len(audio_bytes)} bytes, {samplerate} Hz)...", Color.BLUE)
+            sd.play(data, samplerate)
+            sd.wait()  # Wait until playback finishes
+            log_status("Playback finished.", Color.GREEN)
+        except Exception as e:
+            log_status(f"Error during audio playback: {e}", Color.RED)
+
+    def play_audio_chunk(chunk: np.ndarray, samplerate: int):
+        """
+        Play a single audio chunk (NumPy array) using sounddevice.
+
+        Args:
+            chunk (np.ndarray): The audio data, shape (1, N), (N,), or (N, 1).
+            samplerate (int): The sample rate of the audio chunk.
+        """
+        if chunk.ndim == 2 and chunk.shape[0] == 1:
+            # Transpose from (1, N) to (N, 1)
+            chunk = chunk.T
+        elif chunk.ndim == 1:
+            chunk = chunk[:, np.newaxis]  # Shape (N,) → (N, 1)
+
+        try:
+            sd.play(chunk.astype(np.float32), samplerate)
+            sd.wait()  # Wait until chunk finishes playing
+        except Exception as e:
+            print(f"Playback error: {e}")
 
     @abstractmethod
     def generate_audio_bytes(

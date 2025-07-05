@@ -1,6 +1,7 @@
 torch
 transformers
 soundfile
+sounddevice
 numpy
 huggingface_hub
 parler_tts

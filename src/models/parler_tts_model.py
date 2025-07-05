@@ -129,15 +129,6 @@ class ParlerTTSModel(BaseTTSModel):
         audio_bytes = self.nomalize_to_wave_bytes(audio=audio, sampling_rate=self.model.config.sampling_rate)
         log_status(f"Audio generation complete. Generated {len(audio_bytes)} bytes.", Color.GREEN)
 
-        output_dir = os.path.dirname(output_filename)
-        if output_dir and not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-            log_status(f"Created output directory: {output_dir}", Color.BLUE)
-
-        with open(output_filename, "wb") as f:
-            f.write(audio_bytes)
-            log_status(f"Audio successfully saved to: {output_filename}", Color.GREEN)
-
         return audio_bytes
 
 
