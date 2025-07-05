@@ -5,6 +5,7 @@ import os
 import io
 import gc
 from typing import Literal
+from io import BytesIO
 
 from scipy.io.wavfile import write
 from transformers import AutoTokenizer
@@ -139,25 +140,11 @@ class OrpheusTTSModel(BaseTTSModel):
     def generate_audio_bytes(
         self,
         text: str,
-        language: str = "en", # Kept for BaseTTSModel compatibility, but not used by ParlerTTS here
+        language: str = "en", 
         generation_params: dict = None,
         output_filename="output.wav",
         **kargs
     ) -> bytes:
-        """
-        Generates audio bytes from the given text using the Parler-TTS model.
-        This method is implemented from the BaseTTSModel abstract class.
-        Returns audio as WAV-formatted bytes.
-        
-        Args:
-            text (str): The text to convert to speech.
-            language (str, optional): Kept for BaseTTSModel compatibility, not directly used by ParlerTTS.
-            speaker_embedding (torch.Tensor, optional): Kept for BaseTTSModel compatibility, not directly used by ParlerTTS.
-            generation_params (dict, optional): Dictionary of additional generation parameters
-                                                to override defaults (e.g., {'temperature': 0.8}).
-            description_prompt (str, optional): A text description of the desired voice characteristics
-                                                (e.g., "A female speaker with a calm voice.").
-        """
         if self.model is None:
             raise RuntimeError("Orpheus model not loaded.")
 
@@ -170,21 +157,29 @@ class OrpheusTTSModel(BaseTTSModel):
         if self.device == "cuda":
             torch.cuda.empty_cache()
             gc.collect()
-        
+
         buffer = []
         for i, (sr, chunk) in enumerate(self.model.stream_tts_sync(text, options={"voice_id": "Dan"})):
             buffer.append(chunk)
             print(f"Generated chunk {i}")
-        buffer = np.concatenate(buffer, axis=1)
+        audio_np = np.concatenate(buffer, axis=1).squeeze()
 
+        # Write to in-memory bytes buffer as WAV
+        audio_buffer = BytesIO()
+        sf.write(audio_buffer, audio_np.T, self.sampling_rate, format='WAV')
+        audio_bytes = audio_buffer.getvalue()
+        log_status(f"Audio generation complete. Generated {len(audio_bytes)} bytes.", Color.GREEN)
+        
         output_dir = os.path.dirname(output_filename)
-       
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir)
             log_status(f"Created output directory: {output_dir}", Color.BLUE)
-    
-        write(output_filename,self.sampling_rate , np.concatenate(buffer))
-        log_status(f"Audio successfully saved to: {output_filename}", Color.GREEN)
+
+        with open(output_filename, "wb") as f:
+            f.write(audio_bytes)
+            log_status(f"Audio successfully saved to: {output_filename}", Color.GREEN)
+
+        return audio_bytes
 
     def __del__(self):
         """Clean up specific resources."""

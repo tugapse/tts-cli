@@ -78,26 +78,12 @@ class ParlerTTSModel(BaseTTSModel):
     def generate_audio_bytes(
         self,
         text: str,
-        language: str = "en", # Kept for BaseTTSModel compatibility, but not used by ParlerTTS here
-        speaker_embedding: torch.Tensor = None, # Kept for BaseTTSModel compatibility, but not used by ParlerTTS here
+        language: str = "en",  # Kept for compatibility, not used here
+        speaker_embedding: torch.Tensor = None,  # Not used here
         generation_params: dict = None,
-        description_prompt: str = "A clear voice with a neutral tone.", 
+        description_prompt: str = "A clear voice with a neutral tone.",
         output_filename="output.wav"
     ) -> bytes:
-        """
-        Generates audio bytes from the given text using the Parler-TTS model.
-        This method is implemented from the BaseTTSModel abstract class.
-        Returns audio as WAV-formatted bytes.
-        
-        Args:
-            text (str): The text to convert to speech.
-            language (str, optional): Kept for BaseTTSModel compatibility, not directly used by ParlerTTS.
-            speaker_embedding (torch.Tensor, optional): Kept for BaseTTSModel compatibility, not directly used by ParlerTTS.
-            generation_params (dict, optional): Dictionary of additional generation parameters
-                                                to override defaults (e.g., {'temperature': 0.8}).
-            description_prompt (str, optional): A text description of the desired voice characteristics
-                                                (e.g., "A female speaker with a calm voice.").
-        """
         if self.model is None or self.main_tokenizer is None or self.description_tokenizer is None:
             raise RuntimeError("ParlerTTS model or tokenizers not loaded.")
 
@@ -113,21 +99,18 @@ class ParlerTTSModel(BaseTTSModel):
             gc.collect()
 
         # Prepare inputs using the main tokenizer for the text prompt
-        # Explicitly request attention_mask
         prompt_inputs = self.main_tokenizer(
             text, 
             return_tensors="pt",
-            return_attention_mask=True # Request attention mask
+            return_attention_mask=True
         ).to(self.device)
 
         # Prepare inputs using the description tokenizer for the voice description
-        # Explicitly request attention_mask
         description_inputs = self.description_tokenizer(
-            description_prompt, 
+            description_prompt,
             return_tensors="pt",
-            return_attention_mask=True # Request attention mask
+            return_attention_mask=True
         ).to(self.device)
-
 
         final_generation_params = self.generation_config_defaults.copy()
         if generation_params:
@@ -135,27 +118,27 @@ class ParlerTTSModel(BaseTTSModel):
 
         with torch.no_grad():
             audio_tensor = self.model.generate(
-                input_ids=description_inputs.input_ids, # This is the 'description' input_ids
-                attention_mask=description_inputs.attention_mask, # Pass attention mask for description
-                prompt_input_ids=prompt_inputs.input_ids, # This is the 'text' input_ids
-                prompt_attention_mask=prompt_inputs.attention_mask, # Pass attention mask for text
+                input_ids=description_inputs.input_ids,
+                attention_mask=description_inputs.attention_mask,
+                prompt_input_ids=prompt_inputs.input_ids,
+                prompt_attention_mask=prompt_inputs.attention_mask,
                 **final_generation_params
             ).cpu().numpy()
 
         audio = audio_tensor.squeeze()
+        audio_bytes = self.nomalize_to_wave_bytes(audio=audio, sampling_rate=self.model.config.sampling_rate)
+        log_status(f"Audio generation complete. Generated {len(audio_bytes)} bytes.", Color.GREEN)
 
-        audio = self.nomalize_to_wave_bytes(audio=audio, sampling_rate=self.model.config.sampling_rate )
-        log_status(f"Audio generation complete. Generated {len(audio)} bytes.", Color.GREEN)
         output_dir = os.path.dirname(output_filename)
-       
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir)
             log_status(f"Created output directory: {output_dir}", Color.BLUE)
-        
+
         with open(output_filename, "wb") as f:
-            f.write(audio)
+            f.write(audio_bytes)
             log_status(f"Audio successfully saved to: {output_filename}", Color.GREEN)
-        
+
+        return audio_bytes
 
 
     def __del__(self):
