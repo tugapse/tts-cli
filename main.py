@@ -7,7 +7,7 @@ import torch
 from src.models.model_manager import ModelManager
 from src.utils import log_status, Color
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __available_model_types = ["parler", "orpheus"]
 
 def main():
