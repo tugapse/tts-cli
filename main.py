@@ -7,7 +7,7 @@ import torch
 from src.models.model_manager import ModelManager
 from src.utils import log_status, Color
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __available_model_types = ["parler", "orpheus"]
 
 def main():
@@ -158,7 +158,7 @@ def main():
     # --- Logging input parameters ---
     log_status(f"{Color.BOLD}--- ParlerTTS CLI App Started ---{Color.RESET}", Color.BLUE)
     log_status(f"Input Text: '{final_text[:100]}{'...' if len(final_text) > 100 else ''}'", Color.CYAN)
-    if rgs.output_file: 
+    if args.output_file: 
         log_status(f"Output Path: {args.output_file}", Color.CYAN)
     log_status(f"Model Name: {args.model_name}", Color.CYAN)
     log_status(f"Model Type: {args.model_type}", Color.CYAN)
