@@ -24,12 +24,12 @@ class BaseTTSModel(ABC):
         generation_config_defaults: dict = None,
     ):
         if model_name: self.model_name = model_name
-        
+
         self.device = device
         if self.device is None:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         log_status(f"BaseTTSModel will use device: {self.device}", Color.BLUE)
-        
+
         self.sampling_rate = 24_000
         self.generation_config_defaults = {
             'do_sample': True,
@@ -40,7 +40,7 @@ class BaseTTSModel(ABC):
         }
         if generation_config_defaults:
             self.generation_config_defaults.update(generation_config_defaults)
-    
+
     def nomalize_to_wave_bytes(self, audio, sampling_rate=24_000):
         audio_int16 = (audio * 32767).astype(np.int16)
 
@@ -58,7 +58,7 @@ class BaseTTSModel(ABC):
         This method should handle model loading, device placement, and error handling specific to the model.
         """
         pass
-    
+
     def save_audio_bytes(self, audio_bytes: bytes, output_filename: str):
         """
         Save WAV bytes to a file, creating directories if needed.
@@ -86,7 +86,7 @@ class BaseTTSModel(ABC):
         except Exception as e:
             log_status(f"Error during audio playback: {e}", Color.RED)
 
-    def play_audio_chunk(chunk: np.ndarray, samplerate: int):
+    def play_audio_chunk(self, chunk: np.ndarray, samplerate: int):
         """
         Play a single audio chunk (NumPy array) using sounddevice.
 
@@ -110,7 +110,7 @@ class BaseTTSModel(ABC):
     def generate_audio_bytes(
         self,
         text: str,
-        language: str = "en", 
+        language: str = "en",
         generation_params: dict = None,
         output_filename="output.wav",
         **kargs
