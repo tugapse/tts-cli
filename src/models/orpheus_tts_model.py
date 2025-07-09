@@ -6,6 +6,7 @@ import io
 import gc
 from typing import Literal
 from io import BytesIO
+import sys
 
 from scipy.io.wavfile import write
 from transformers import AutoTokenizer
@@ -93,8 +94,8 @@ class OrpheusCppCuda(OrpheusCpp):
 
 class OrpheusTTSModel(BaseTTSModel):
     """
-    Concrete implementation of BaseTTSModel for Hugging Face's Parler-TTS models.
-    Closely matches the official example for parler-tts-mini-v1 for reliable operation.
+    Concrete implementation of BaseTTSModel for Hugging Face's Orpheus models.
+    
     """
     def __init__(
         self,
@@ -111,12 +112,12 @@ class OrpheusTTSModel(BaseTTSModel):
         try:
             self._load_model_and_processor()
         except Exception as e:
-            log_status(f"ERROR: ParlerTTSModel initialization failed during model loading: {e}", Color.RED)
+            log_status(f"ERROR: Orpheus initialization failed during model loading: {e}", Color.RED)
             raise
 
     def _load_model_and_processor(self):
         """
-        Loads the Parler-TTS tokenizers and model from Hugging Face.
+        Loads the Orpheus-TTS tokenizers and model from Hugging Face.
         Uses AutoTokenizer for both text and description, matching the official example.
         """
         log_status(f"Attempting to load Orpheus-TTS model: {self.model_name}...", Color.YELLOW)
@@ -135,7 +136,16 @@ class OrpheusTTSModel(BaseTTSModel):
             verbose=False,
             lang=lang
             )
-        log_status(f"Successfully loaded Parler-TTS model: {self.model_name}", Color.GREEN)
+        log_status(f"Successfully loaded Orpheus-TTS model: {self.model_name}", Color.GREEN)
+
+    def nomalize_to_wave_bytes(self,buffer):
+        
+        audio_np = np.concatenate(buffer, axis=1).squeeze()
+        # Write to in-memory bytes buffer as WAV
+        audio_buffer = BytesIO()
+        sf.write(audio_buffer, audio_np.T, self.sampling_rate, format='WAV')
+        audio_bytes = audio_buffer.getvalue()
+        return audio_bytes
 
     def generate_audio_bytes(
         self,
@@ -160,13 +170,10 @@ class OrpheusTTSModel(BaseTTSModel):
         buffer = []
         for i, (sr, chunk) in enumerate(self.model.stream_tts_sync(text, options={"voice_id": self.generation_config_defaults.get('voice','dan')})):
             buffer.append(chunk)
-            print(f"Generated chunk {i}")
-        audio_np = np.concatenate(buffer, axis=1).squeeze()
-
-        # Write to in-memory bytes buffer as WAV
-        audio_buffer = BytesIO()
-        sf.write(audio_buffer, audio_np.T, self.sampling_rate, format='WAV')
-        audio_bytes = audio_buffer.getvalue()
+            print(f"\rGenerated chunk {i} ", end="")
+        print()
+        
+        audio_bytes = self.nomalize_to_wave_bytes(buffer)
         log_status(f"Audio generation complete. Generated {len(audio_bytes)} bytes.", Color.GREEN)
 
         return audio_bytes
@@ -175,8 +182,5 @@ class OrpheusTTSModel(BaseTTSModel):
         """Clean up specific resources."""
         if hasattr(self, 'model') and self.model is not None:
             del self.model
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        gc.collect() 
         super().__del__()
 
