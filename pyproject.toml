@@ -16,7 +16,7 @@ name = "tts-cli" # The name of your package as it will appear on PyPI/your index
 version = "0.2.2"
 
 authors = [
-  { name="Fabio Almeida", email="N/A" }, 
+  { name="Fabio Almeida", email="tugapse@gmai.com" }, 
 ]
 
 description = "A command-line tool for Text-to-Speech" # A short, one-sentence description.
