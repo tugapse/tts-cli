@@ -39,17 +39,15 @@ jobs:
           path: my-python-index-repo # Local path to clone the index repo
           token: ${{ secrets.GH_PAT_INDEX_REPO }} # Use the PAT secret
 
-      - name: Copy Package Distributions to Index Repo
+      # --------- FIXED SECTION BELOW: combine copy/export/script ---------
+      - name: Copy dists and Update PyPI Index HTML Files
         run: |
           PACKAGE_NAME=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['name'].lower().replace('_', '-'))")
-          export PACKAGE_NAME
           mkdir -p my-python-index-repo/$PACKAGE_NAME
           cp dist/* my-python-index-repo/$PACKAGE_NAME/
-
-      - name: Update PyPI Index HTML Files
-        run: |
           pip install beautifulsoup4
           cd my-python-index-repo
+          export PACKAGE_NAME
           python - <<EOF
           import os
           import hashlib
