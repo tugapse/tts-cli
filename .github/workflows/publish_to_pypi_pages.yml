@@ -25,7 +25,7 @@ jobs:
 
       - name: Install build tools
         run: |
-          pip install build twine wheel
+          pip install build twine wheel toml
 
       - name: Build sdist and wheel
         run: |
