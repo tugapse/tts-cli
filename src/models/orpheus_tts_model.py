@@ -106,9 +106,9 @@ class OrpheusTTSModel(BaseTTSModel):
         self.main_tokenizer = None
         self.description_tokenizer = None
         self.model = None 
+        self.voice_id = None
         super().__init__(model_name, device, generation_config_defaults)
         self.model_name = model_name or "canopylabs/orpheus-tts-0.1-finetune-prod"
-
         try:
             self._load_model_and_processor()
         except Exception as e:
@@ -123,10 +123,11 @@ class OrpheusTTSModel(BaseTTSModel):
         log_status(f"Attempting to load Orpheus-TTS model: {self.model_name}...", Color.YELLOW)
 
         n_gpu_layers = self.generation_config_defaults.get("n_gpu_layers",-1)
-        n_threads = self.generation_config_defaults.get("n_threads",1)
+        n_threads = self.generation_config_defaults.get("n_threads",0)
         n_ctx = self.generation_config_defaults.get("n_ctx",4096)
         lang = self.generation_config_defaults.get("lang","en")
-        log_status(f"Loading params: n_gpu_layers:{n_gpu_layers}, n_threads:{n_threads}, n_ctx:{n_ctx},lang:{lang}", Color.HEADER)
+        self.voice_id = self.generation_config_defaults.get("voice_id","leo")
+        log_status(f"Loading params: n_gpu_layers:{n_gpu_layers}, n_threads:{n_threads}, n_ctx:{n_ctx}, lang:{lang}, voice:{self.voice_id}", Color.HEADER)
 
 
         self.model = OrpheusCppCuda(
@@ -168,7 +169,7 @@ class OrpheusTTSModel(BaseTTSModel):
             gc.collect()
 
         buffer = []
-        for i, (sr, chunk) in enumerate(self.model.stream_tts_sync(text, options={"voice_id": self.generation_config_defaults.get('voice','dan')})):
+        for i, (sr, chunk) in enumerate(self.model.stream_tts_sync(text, options={"voice_id": self.generation_config_defaults.get('voice_id')})):
             buffer.append(chunk)
             print(f"\rGenerated chunk {i} ", end="")
         print()
