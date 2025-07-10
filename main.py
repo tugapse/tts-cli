@@ -114,6 +114,12 @@ def main():
         help="A text description of the desired voice characteristics."
     )
     parser.add_argument(
+        "--voice", "-vc",
+        type=str,
+        default=None,
+        help="Used by Orpheus model type ( tara, leah, jess, leo, dan, mia, zac, zoe). Default to 'leo'"
+    )
+    parser.add_argument(
         "--debug-console", "-dc",
         action='store_true',
         help="Raise errors in the console for debugging."
@@ -156,15 +162,17 @@ def main():
         parser.error("No input text provided. Use --text, a positional argument, or pipe data to stdin.")
 
     # --- Logging input parameters ---
-    log_status(f"{Color.BOLD}--- ParlerTTS CLI App Started ---{Color.RESET}", Color.BLUE)
+    log_status(f"{Color.BOLD}--- TTS CLI App Started ---{Color.RESET}", Color.BLUE)
     log_status(f"Input Text: '{final_text[:100]}{'...' if len(final_text) > 100 else ''}'", Color.CYAN)
     if args.output_file: 
         log_status(f"Output Path: {args.output_file}", Color.CYAN)
-    log_status(f"Model Name: {args.model_name}", Color.CYAN)
+    if args.model_name: 
+        log_status(f"Model Name: {args.model_name}", Color.CYAN)
     log_status(f"Model Type: {args.model_type}", Color.CYAN)
     log_status(f"Language: {args.language}", Color.CYAN)
     log_status(f"Speaker Embedding Path: {args.speaker_embedding_path or 'None (random speaker)'}", Color.CYAN)
-    log_status(f"Description Prompt: '{args.description_prompt}'", Color.CYAN)
+    if args.description_prompt:
+        log_status(f"Description Prompt: '{args.description_prompt}'", Color.CYAN)
     log_status(f"Generation Params: Temp={args.temperature}, Top-K={args.top_k}, Top-P={args.top_p}, Max Tokens={args.max_new_tokens}", Color.CYAN)
 
     speaker_embedding_tensor = None
@@ -185,6 +193,7 @@ def main():
             'top_k': args.top_k,
             'top_p': args.top_p,
             'max_new_tokens': args.max_new_tokens,
+            'voice_id':args.voice
         }
 
         model_manager = ModelManager(model_type=args.model_type)
