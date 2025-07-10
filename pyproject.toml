@@ -1,0 +1,63 @@
+# pyproject.toml
+# This file tells Python packaging tools how to build your project.
+
+[build-system]
+# Specifies the build backend. Setuptools is a common choice.
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# This section defines the metadata for your Python package.
+# You MUST customize these fields for your project.
+
+name = "tts-cli" # The name of your package as it will appear on PyPI/your index.
+                 # Often matches your repository name, but can be different.
+                 # Use hyphens (-) instead of underscores (_) for the package name here.
+
+version = "0.1.0" # The current version of your package.
+                  # Follows Semantic Versioning (e.g., 0.1.0, 1.0.0, 1.0.1).
+                  # You'll update this for new releases.
+
+authors = [
+  { name="Your Name", email="your.email@example.com" }, # Replace with your name and email
+]
+
+description = "A command-line tool for Text-to-Speech" # A short, one-sentence description.
+
+readme = "README.md" # Path to your project's README file. This will be displayed on your index.
+
+requires-python = "3.11" # The minimum Python version required by your package.
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License", # Choose your license (e.g., MIT, Apache-2.0, GPL-3.0)
+    "Operating System :: OS Independent",
+    # Add more classifiers relevant to your project:
+    # "Topic :: Multimedia :: Sound/Audio :: Speech",
+    # "Environment :: Console",
+]
+
+# Optional: Define dependencies your project needs to run.
+# These are packages that pip will automatically install alongside yours.
+dependencies = [
+    "torch",             # Core deep learning library
+    "transformers",      # For using various NLP models
+    "soundfile",         # For reading/writing sound files
+    "sounddevice",       # For playing/recording sound
+    "numpy",             # Fundamental package for numerical computing (often a dependency of others, but if you use it directly, list it)
+    "huggingface_hub",   # For interacting with Hugging Face models/datasets
+    "parler_tts",        # Likely a core TTS model/library you're wrapping
+    "llama-cpp-python",  # For local LLM inference, sounds like a core component
+    "orpheus-cpp",       # Another C++ binding, likely a core component
+]
+
+# Optional: If your package is a command-line tool, define entry points.
+# This makes your script executable directly from the command line after installation.
+[project.scripts]
+# tts = "tts_cli.main:run_cli" # Example: 'tts' command runs 'run_cli' function in 'tts_cli/main.py'
+                               # Adjust 'tts_cli.main' to match your actual package structure and entry point.
+
+[project.urls]
+# Optional: Links to your project's homepage, documentation, etc.
+"Homepage" = "https://github.com/your-username/tts-cli" # Replace with your actual GitHub repo URL
+"Bug Tracker" = "https://github.com/your-username/tts-cli/issues"
