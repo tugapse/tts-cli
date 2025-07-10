@@ -42,8 +42,8 @@ jobs:
       - name: Copy Package Distributions to Index Repo
         run: |
           PACKAGE_NAME=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['name'].lower().replace('_', '-'))")
-          mkdir -p my-python-index-repo/$PACKAGE_NAME
-          cp dist/* my-python-index-repo/$PACKAGE_NAME/
+          mkdir -p python-index-repo/$PACKAGE_NAME
+          cp dist/* python-index-repo/$PACKAGE_NAME/
 
       - name: Update PyPI Index HTML Files
         run: |
@@ -53,7 +53,7 @@ jobs:
           pip install beautifulsoup4 # Required for the Python script below
 
           # Navigate into the cloned index repo
-          cd my-python-index-repo
+          cd python-index-repo
 
           # Create/update the package's index.html
           python - <<EOF
@@ -117,9 +117,9 @@ jobs:
 
       - name: Configure Git for committing
         run: |
-          cd my-python-index-repo
+          cd python-index-repo
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add .
-          git commit -m "Auto-update PyPI index for ${{ github.event.repository.name }} v${{ github.event.release.tag_name || 'latest' }} [skip ci]" || echo "No changes to commit" # '|| echo' prevents failure if no changes
-          git push
+          git commit -m "Auto-update PyPI index for ${{ github.event.repository.name }} v${{ github.event.release.tag_name || '
+
