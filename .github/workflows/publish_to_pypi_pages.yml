@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tugapse/python-index 
-          path: my-python-index-repo # Local path to clone the index repo
+          path: python-index-repo # Local path to clone the index repo
           token: ${{ secrets.GH_PAT_INDEX_REPO }} # Use the PAT secret
 
       - name: Copy Package Distributions to Index Repo
@@ -47,73 +47,73 @@ jobs:
 
       - name: Update PyPI Index HTML Files
         run: |
+          # Install tool to generate index files automatically
+          # We'll use a simple script or a dedicated action for this.
+          # For simplicity, let's use a small Python script for now.
           pip install beautifulsoup4 # Required for the Python script below
-
-          # Export PACKAGE_NAME for access in the Python script
-          export PACKAGE_NAME=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['name'].lower().replace('_', '-'))")
 
           # Navigate into the cloned index repo
           cd my-python-index-repo
 
           # Create/update the package's index.html
           python - <<EOF
-import os
-import hashlib
-from bs4 import BeautifulSoup
+          import os
+          import hashlib
+          from bs4 import BeautifulSoup
 
-package_dir = os.environ["PACKAGE_NAME"]
-package_index_path = os.path.join(package_dir, "index.html")
+          package_dir = "$PACKAGE_NAME"
+          package_index_path = os.path.join(package_dir, "index.html")
 
-# Create a basic HTML structure for the package's index.html
-html_content = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Links for {package_dir}</title>
-</head>
-<body>
-    <h1>Links for {package_dir}</h1>
-</body>
-</html>
-"""
-soup = BeautifulSoup(html_content, 'html.parser')
-body = soup.find('body')
+          # Create a basic HTML structure for the package's index.html
+          html_content = f"""
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Links for {package_dir}</title>
+          </head>
+          <body>
+              <h1>Links for {package_dir}</h1>
+          </body>
+          </html>
+          """
+          soup = BeautifulSoup(html_content, 'html.parser')
+          body = soup.find('body')
 
-# Add/update links for each distribution file
-for filename in sorted(os.listdir(package_dir)):
-    if filename.endswith(('.whl', '.tar.gz')):
-        filepath = os.path.join(package_dir, filename)
-        with open(filepath, 'rb') as f:
-            sha256_hash = hashlib.sha256(f.read()).hexdigest()
+          # Add/update links for each distribution file
+          for filename in sorted(os.listdir(package_dir)):
+              if filename.endswith(('.whl', '.tar.gz')):
+                  filepath = os.path.join(package_dir, filename)
+                  with open(filepath, 'rb') as f:
+                      sha256_hash = hashlib.sha256(f.read()).hexdigest()
 
-        link = soup.new_tag("a", href=f"{filename}#sha256={sha256_hash}")
-        link.string = filename
-        body.append(link)
-        body.append(soup.new_tag("br"))
+                  link = soup.new_tag("a", href=f"{filename}#sha256={sha256_hash}")
+                  link.string = filename
+                  body.append(link)
+                  body.append(soup.new_tag("br"))
 
-with open(package_index_path, "w") as f:
-    f.write(str(soup))
+          with open(package_index_path, "w") as f:
+              f.write(str(soup))
 
-# --- Update the root index.html ---
-root_index_path = "index.html"
-if os.path.exists(root_index_path):
-    with open(root_index_path, "r") as f:
-        root_soup = BeautifulSoup(f, 'html.parser')
-else:
-    root_soup = BeautifulSoup("<!DOCTYPE html><html><head><title>Simple Index</title></head><body><h1>Simple Index</h1></body></html>", 'html.parser')
+          # --- Update the root index.html ---
+          root_index_path = "index.html"
+          if os.path.exists(root_index_path):
+              with open(root_index_path, "r") as f:
+                  root_soup = BeautifulSoup(f, 'html.parser')
+          else:
+              root_soup = BeautifulSoup("<!DOCTYPE html><html><head><title>Simple Index</title></head><body><h1>Simple Index</h1></body></html>", 'html.parser')
 
-root_body = root_soup.find('body')
-
-# Check if link already exists
-existing_link = root_body.find('a', href=f"{package_dir}/")
-if not existing_link:
-    link_tag = root_soup.new_tag("a", href=f"{package_dir}/")
-    link_tag.string = package_dir
-    root_body.append(link_tag)
-    root_body.append(root_soup.new_tag("br"))
-    with open(root_index_path, "w") as f:
-        f.write(str(root_soup))
-EOF
+          root_body = root_soup.find('body')
+          
+          # Check if link already exists
+          existing_link = root_body.find('a', href=f"{package_dir}/")
+          if not existing_link:
+              link_tag = root_soup.new_tag("a", href=f"{package_dir}/")
+              link_tag.string = package_dir
+              root_body.append(link_tag)
+              root_body.append(root_soup.new_tag("br"))
+              with open(root_index_path, "w") as f:
+                  f.write(str(root_soup))
+          EOF
 
       - name: Configure Git for committing
         run: |
@@ -121,5 +121,5 @@ EOF
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add .
-          git commit -m "Auto-update PyPI index for ${{ github.event.repository.name }} v${{ github.event.release.tag_name || 'latest' }} [skip ci]" || echo "No changes to commit"
+          git commit -m "Auto-update PyPI index for ${{ github.event.repository.name }} v${{ github.event.release.tag_name || 'latest' }} [skip ci]" || echo "No changes to commit" # '|| echo' prevents failure if no changes
           git push
