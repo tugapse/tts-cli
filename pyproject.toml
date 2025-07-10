@@ -26,7 +26,7 @@ description = "A command-line tool for Text-to-Speech" # A short, one-sentence d
 
 readme = "README.md" # Path to your project's README file. This will be displayed on your index.
 
-requires-python = "3.11" # The minimum Python version required by your package.
+requires-python = ">=3.8, <3.13" # The minimum Python version required by your package.
 
 classifiers = [
     "Programming Language :: Python :: 3",
