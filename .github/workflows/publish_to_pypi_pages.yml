@@ -43,7 +43,7 @@ jobs:
         run: |
           # Get the package name directly from the original pyproject.toml
           # The original repo is one directory level up from 'my-python-index-repo'
-          PACKAGE_NAME_RAW=$(python -c "import toml; print(toml.load('../pyproject.toml')['project']['name'])")
+          PACKAGE_NAME_RAW=$(python -c "import toml; print(toml.load('./pyproject.toml')['project']['name'])")
           PACKAGE_NAME=$(echo "$PACKAGE_NAME_RAW" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
 
           echo "Processing package: $PACKAGE_NAME"
