@@ -13,7 +13,7 @@ name = "tts-cli" # The name of your package as it will appear on PyPI/your index
                  # Often matches your repository name, but can be different.
                  # Use hyphens (-) instead of underscores (_) for the package name here.
 
-version = "0.2.2"
+version = "0.2.3"
 
 authors = [
   { name="Fabio Almeida", email="tugapse@gmai.com" }, 
