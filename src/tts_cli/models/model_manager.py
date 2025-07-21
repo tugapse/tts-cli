@@ -1,6 +1,6 @@
 # model_manager.py
 
-from src.utils import Color , log_status
+from src.tts_cli.utils import Color , log_status
 
 
 class ModelManager:
@@ -17,7 +17,7 @@ class ModelManager:
         """
         if self.model_type == "parler":
 
-            from src.models.parler_tts_model import ParlerTTSModel
+            from src.tts_cli.models.parler_tts_model import ParlerTTSModel
             
             log_status(f"Loading ParlerTTS model engine: {model_name} on device {device}...", Color.BLUE)
             return ParlerTTSModel(
@@ -27,7 +27,7 @@ class ModelManager:
             )
         elif self.model_type == "orpheus":
 
-            from src.models.orpheus_tts_model import OrpheusTTSModel
+            from src.tts_cli.models.orpheus_tts_model import OrpheusTTSModel
             
             log_status(f"Loading OrpheusTTS model engine: {model_name} on device {device}...", Color.BLUE)
             return OrpheusTTSModel(

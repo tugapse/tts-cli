@@ -12,8 +12,8 @@ from parler_tts import ParlerTTSForConditionalGeneration
 from huggingface_hub.errors import RepositoryNotFoundError, GatedRepoError
 import requests.exceptions
 
-from src.models.base_tts_model import BaseTTSModel
-from src.utils import log_status, Color
+from src.tts_cli.modelsmodels.base_tts_model import BaseTTSModel
+from src.tts_cli.modelsutils import log_status, Color
 
 class ParlerTTSModel(BaseTTSModel):
     """

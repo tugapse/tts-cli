@@ -9,7 +9,7 @@ import soundfile as sf
 
 from abc import ABC, abstractmethod
 
-from src.utils import log_status, Color
+from src.tts_cli.utils import log_status, Color
 
 class BaseTTSModel(ABC):
     """

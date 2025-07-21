@@ -4,13 +4,13 @@ import os
 import numpy as np
 import torch
 
-from src.models.model_manager import ModelManager
-from src.utils import log_status, Color
+from src.tts_cli.models.model_manager import ModelManager
+from src.tts_cli.utils import log_status, Color
 
 __version__ = "0.2.2"
 __available_model_types = ["parler", "orpheus"]
 
-def main():
+def run():
     parser = argparse.ArgumentParser(
         description=f"{Color.BOLD}{Color.BLUE}TTS CLI App:{Color.RESET} Generate speech from text using Hugging Face TTS models.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -229,4 +229,4 @@ def main():
             del tts_engine
 
 if __name__ == "__main__":
-    main()
+    run()

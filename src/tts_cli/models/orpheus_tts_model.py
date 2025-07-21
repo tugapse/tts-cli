@@ -16,8 +16,8 @@ import requests.exceptions
 from orpheus_cpp import OrpheusCpp
 import onnxruntime
 
-from src.models.base_tts_model import BaseTTSModel
-from src.utils import log_status, Color
+from src.tts_cli.models.base_tts_model import BaseTTSModel
+from src.tts_cli.utils import log_status, Color
 
 
 
